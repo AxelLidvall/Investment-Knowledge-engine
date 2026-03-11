@@ -1,6 +1,6 @@
 # Investment Knowledge Engine
 
-RAG system for a family office investment team. Upload investment documents (annual reports, memos, diligence packs) and query them through a grounded chat interface with citations.
+RAG system. Upload investment documents (annual reports, memos, diligence packs) and query them through a grounded chat interface with citations.
 
 ## Stack
 
