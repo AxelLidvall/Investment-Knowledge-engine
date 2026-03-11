@@ -1,6 +1,6 @@
 # Investment Knowledge Engine
 
-RAG system for a family office investment team. Ingests investment documents (annual reports, memos, diligence packs, board updates) and makes them queryable through a grounded chat interface with citations.
+RAG system for an investment team. Ingests investment documents (annual reports, memos, diligence packs, board updates) and makes them queryable through a grounded chat interface with citations.
 
 Full architecture: `docs/architecture.md`
 
