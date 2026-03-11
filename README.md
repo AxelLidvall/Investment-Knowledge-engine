@@ -1,6 +1,6 @@
 # Investment Knowledge Engine
 
-RAG system. Upload investment documents (annual reports, memos, diligence packs) and query them through a grounded chat interface with citations.
+RAG system for an investment firm. Upload investment documents (annual reports, memos, diligence packs) and query them through a grounded chat interface with citations.
 
 ## Stack
 
