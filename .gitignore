@@ -1,0 +1,60 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Personal Claude Code preferences
+CLAUDE.local.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Mypy / Ruff
+.mypy_cache/
+.ruff_cache/
+
+# Alembic
+# Keep versions/ in git — only ignore local state
+alembic/versions/*.pyc
+
+# Node / Frontend
+ui/node_modules/
+ui/dist/
+ui/.vite/
+ui/.env
+ui/.env.local
+
+# Data
+data/sample_docs/*.pdf
+data/uploads/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
