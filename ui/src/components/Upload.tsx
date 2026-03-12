@@ -1,5 +1,19 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Select, { StylesConfig } from "react-select";
+import CreatableSelect from "react-select/creatable";
 import { parseApiError } from "../api";
+
+interface CompanyOption {
+  value: string;
+  label: string;
+}
+
+const DOC_TYPES = [
+  { value: "annual_report", label: "Annual Report" },
+  { value: "investment_memo", label: "Investment Memo" },
+  { value: "diligence_pack", label: "Diligence Pack" },
+  { value: "board_update", label: "Board Update" },
+];
 
 interface UploadResult {
   document_id: number;
@@ -10,13 +24,42 @@ interface UploadResult {
   status: string;
 }
 
-export default function Upload() {
+const selectStyles: StylesConfig<CompanyOption> = {
+  control: (base, state) => ({
+    ...base,
+    borderColor: state.isFocused ? "transparent" : "#d1d5db",
+    borderRadius: 6,
+    fontSize: "0.9rem",
+    fontFamily: "system-ui, sans-serif",
+    boxShadow: state.isFocused ? "0 0 0 2px #6366f1" : "none",
+    "&:hover": { borderColor: "#d1d5db" },
+    minHeight: 36,
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "0.9rem",
+    backgroundColor: state.isSelected ? "#111" : state.isFocused ? "#f3f4f6" : "#fff",
+    color: state.isSelected ? "#fff" : "#1a1a1a",
+  }),
+  placeholder: (base) => ({ ...base, color: "#9ca3af" }),
+  noOptionsMessage: (base) => ({ ...base, fontSize: "0.875rem", color: "#6b7280" }),
+};
+
+export default function Upload({ onUploadSuccess }: { onUploadSuccess?: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [company, setCompany] = useState("");
-  const [docType, setDocType] = useState("annual_report");
+  const [company, setCompany] = useState<CompanyOption | null>(null);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [docType, setDocType] = useState<CompanyOption>(DOC_TYPES[0]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/companies")
+      .then((r) => r.json())
+      .then((data: string[]) => setCompanies(data.map((c) => ({ value: c, label: c }))))
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,18 +68,24 @@ export default function Upload() {
 
     const file = fileRef.current?.files?.[0];
     if (!file) return setError("Select a PDF file.");
-    if (!company.trim()) return setError("Enter a company name.");
+    if (!company) return setError("Enter a company name.");
 
     const form = new FormData();
     form.append("file", file);
-    form.append("company", company.trim());
-    form.append("doc_type", docType);
+    form.append("company", company.value.trim());
+    form.append("doc_type", docType.value);
 
     setLoading(true);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: form });
       if (!res.ok) throw new Error(await parseApiError(res));
-      setResult(await res.json());
+      const data = await res.json();
+      setResult(data);
+      // Add the new company to the local list if it was freshly created
+      if (!companies.find((c) => c.value === company.value)) {
+        setCompanies((prev) => [...prev, company].sort((a, b) => a.label.localeCompare(b.label)));
+      }
+      onUploadSuccess?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -48,28 +97,28 @@ export default function Upload() {
     <div className="card">
       <form onSubmit={handleSubmit}>
         <div className="field">
-          <label htmlFor="upload-company">Company</label>
-          <input
-            id="upload-company"
-            type="text"
-            placeholder="e.g. Acme Corp"
+          <label>Company</label>
+          <CreatableSelect<CompanyOption>
+            options={companies}
             value={company}
-            onChange={(e) => setCompany(e.target.value)}
+            onChange={(opt) => { setCompany(opt); setError(""); }}
+            placeholder="Select or type a new company…"
+            isClearable
+            styles={selectStyles}
+            formatCreateLabel={(input) => `Add "${input}"`}
+            noOptionsMessage={() => "Type to create a new company"}
           />
         </div>
 
         <div className="field">
-          <label htmlFor="doc-type">Document type</label>
-          <select
-            id="doc-type"
+          <label>Document type</label>
+          <Select<CompanyOption>
+            options={DOC_TYPES}
             value={docType}
-            onChange={(e) => setDocType(e.target.value)}
-          >
-            <option value="annual_report">Annual Report</option>
-            <option value="investment_memo">Investment Memo</option>
-            <option value="diligence_pack">Diligence Pack</option>
-            <option value="board_update">Board Update</option>
-          </select>
+            onChange={(opt) => opt && setDocType(opt)}
+            styles={selectStyles}
+            isSearchable={false}
+          />
         </div>
 
         <div className="field">

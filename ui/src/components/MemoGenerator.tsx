@@ -40,7 +40,7 @@ const selectStyles: StylesConfig<CompanyOption> = {
 
 export default function MemoGenerator({ companies }: { companies: CompanyOption[] }) {
   const [company, setCompany] = useState<CompanyOption | null>(null);
-  const [memoType, setMemoType] = useState("summary");
+  const [memoType, setMemoType] = useState<CompanyOption>(MEMO_TYPES[0]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MemoResult | null>(null);
   const [error, setError] = useState("");
@@ -56,7 +56,7 @@ export default function MemoGenerator({ companies }: { companies: CompanyOption[
       const res = await fetch("/api/memo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company: company.value, memo_type: memoType }),
+        body: JSON.stringify({ company: company.value, memo_type: memoType.value }),
       });
       if (!res.ok) throw new Error(await parseApiError(res));
       setResult(await res.json());
@@ -96,16 +96,14 @@ export default function MemoGenerator({ companies }: { companies: CompanyOption[
         </div>
 
         <div className="field">
-          <label htmlFor="memo-type">Memo type</label>
-          <select
-            id="memo-type"
+          <label>Memo type</label>
+          <Select<CompanyOption>
+            options={MEMO_TYPES}
             value={memoType}
-            onChange={(e) => setMemoType(e.target.value)}
-          >
-            {MEMO_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
+            onChange={(opt) => opt && setMemoType(opt)}
+            styles={selectStyles}
+            isSearchable={false}
+          />
         </div>
 
         <button className="btn" type="submit" disabled={loading || !company}>
@@ -121,7 +119,7 @@ export default function MemoGenerator({ companies }: { companies: CompanyOption[
             <div>
               <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>{result.title}</h2>
               <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: 2 }}>
-                {result.company} · {MEMO_TYPES.find((t) => t.value === result.memo_type)?.label} · {formattedDate}
+                {result.company} · {MEMO_TYPES.find((t) => t.value === result.memo_type)?.label ?? result.memo_type} · {formattedDate}
               </p>
             </div>
             <button
