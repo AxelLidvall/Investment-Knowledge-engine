@@ -2,8 +2,9 @@ import { useState, useCallback } from "react";
 import Upload from "./components/Upload";
 import QueryChat from "./components/QueryChat";
 import MemoGenerator from "./components/MemoGenerator";
+import DocumentLibrary from "./components/DocumentLibrary";
 
-type Tab = "upload" | "ask" | "memo";
+type Tab = "upload" | "ask" | "memo" | "library";
 
 export interface CompanyOption {
   value: string;
@@ -30,6 +31,13 @@ export default function App() {
       setCompanies(await loadCompanies());
     }
   }, []);
+
+  const tabLabels: Record<Tab, string> = {
+    upload: "Upload",
+    ask: "Ask",
+    memo: "Memo",
+    library: "Library",
+  };
 
   return (
     <>
@@ -60,21 +68,22 @@ export default function App() {
         <h1>Investment Knowledge Engine</h1>
 
         <div className="tabs">
-          {(["upload", "ask", "memo"] as Tab[]).map((t) => (
+          {(["upload", "ask", "memo", "library"] as Tab[]).map((t) => (
             <button
               key={t}
               className={`tab${tab === t ? " active" : ""}`}
               onClick={() => handleTabClick(t)}
             >
-              {t === "upload" ? "Upload" : t === "ask" ? "Ask" : "Memo"}
+              {tabLabels[t]}
             </button>
           ))}
         </div>
 
         {/* All panels stay mounted — CSS toggles visibility, preserving state across tab switches */}
-        <div style={{ display: tab === "upload" ? "block" : "none" }}><Upload /></div>
-        <div style={{ display: tab === "ask"    ? "block" : "none" }}><QueryChat companies={companies} /></div>
-        <div style={{ display: tab === "memo"   ? "block" : "none" }}><MemoGenerator companies={companies} /></div>
+        <div style={{ display: tab === "upload"  ? "block" : "none" }}><Upload /></div>
+        <div style={{ display: tab === "ask"     ? "block" : "none" }}><QueryChat companies={companies} /></div>
+        <div style={{ display: tab === "memo"    ? "block" : "none" }}><MemoGenerator companies={companies} /></div>
+        <div style={{ display: tab === "library" ? "block" : "none" }}><DocumentLibrary /></div>
       </div>
     </>
   );
