@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-
-interface Props {
-  company: string;
-}
+import Select, { StylesConfig } from "react-select";
+import { CompanyOption } from "../App";
 
 interface Message {
   role: "user" | "assistant";
@@ -10,7 +8,29 @@ interface Message {
   sources?: string[];
 }
 
-export default function QueryChat({ company }: Props) {
+const selectStyles: StylesConfig<CompanyOption> = {
+  control: (base, state) => ({
+    ...base,
+    borderColor: state.isFocused ? "transparent" : "#d1d5db",
+    borderRadius: 6,
+    fontSize: "0.9rem",
+    fontFamily: "system-ui, sans-serif",
+    boxShadow: state.isFocused ? "0 0 0 2px #6366f1" : "none",
+    "&:hover": { borderColor: "#d1d5db" },
+    minHeight: 36,
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "0.9rem",
+    backgroundColor: state.isSelected ? "#111" : state.isFocused ? "#f3f4f6" : "#fff",
+    color: state.isSelected ? "#fff" : "#1a1a1a",
+  }),
+  placeholder: (base) => ({ ...base, color: "#9ca3af" }),
+  noOptionsMessage: (base) => ({ ...base, fontSize: "0.875rem", color: "#6b7280" }),
+};
+
+export default function QueryChat({ companies }: { companies: CompanyOption[] }) {
+  const [company, setCompany] = useState<CompanyOption | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +46,7 @@ export default function QueryChat({ company }: Props) {
     setError("");
     const q = question.trim();
     if (!q) return;
-    if (!company.trim()) return setError("Enter a company name at the top.");
+    if (!company) return setError("Select a company first.");
 
     setMessages((prev) => [...prev, { role: "user", text: q }]);
     setQuestion("");
@@ -36,7 +56,7 @@ export default function QueryChat({ company }: Props) {
       const res = await fetch("/api/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, company: company.trim() }),
+        body: JSON.stringify({ question: q, company: company.value }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -49,7 +69,6 @@ export default function QueryChat({ company }: Props) {
       ]);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Request failed.");
-      // remove the user message we optimistically added
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
@@ -58,6 +77,25 @@ export default function QueryChat({ company }: Props) {
 
   return (
     <div className="card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Company selector */}
+      <div className="field" style={{ marginBottom: 0 }}>
+        <label>Company</label>
+        <Select<CompanyOption>
+          options={companies}
+          value={company}
+          onChange={(opt) => { setCompany(opt); setMessages([]); setError(""); }}
+          placeholder={
+            companies.length === 0
+              ? "No documents uploaded yet"
+              : "Search companies…"
+          }
+          isDisabled={companies.length === 0}
+          isClearable
+          styles={selectStyles}
+          noOptionsMessage={() => "No match"}
+        />
+      </div>
+
       {/* Message list */}
       <div
         style={{
@@ -72,12 +110,17 @@ export default function QueryChat({ company }: Props) {
       >
         {messages.length === 0 && (
           <p style={{ color: "#9ca3af", fontSize: "0.875rem" }}>
-            Ask a question about {company || "the selected company"}.
+            {company
+              ? `Ask a question about ${company.label}.`
+              : "Select a company, then ask a question."}
           </p>
         )}
 
         {messages.map((msg, i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
+          <div
+            key={i}
+            style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}
+          >
             <div
               style={{
                 maxWidth: "80%",
@@ -121,13 +164,13 @@ export default function QueryChat({ company }: Props) {
       <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8 }}>
         <input
           type="text"
-          placeholder="Ask a question…"
+          placeholder={company ? "Ask a question…" : "Select a company first…"}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          disabled={loading}
+          disabled={loading || !company}
           style={{ flex: 1 }}
         />
-        <button className="btn" type="submit" disabled={loading || !question.trim()}>
+        <button className="btn" type="submit" disabled={loading || !question.trim() || !company}>
           Send
         </button>
       </form>

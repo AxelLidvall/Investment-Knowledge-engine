@@ -1,9 +1,5 @@
 import { useRef, useState } from "react";
 
-interface Props {
-  company: string;
-}
-
 interface UploadResult {
   document_id: number;
   filename: string;
@@ -13,8 +9,9 @@ interface UploadResult {
   status: string;
 }
 
-export default function Upload({ company }: Props) {
+export default function Upload() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [company, setCompany] = useState("");
   const [docType, setDocType] = useState("annual_report");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
@@ -27,7 +24,7 @@ export default function Upload({ company }: Props) {
 
     const file = fileRef.current?.files?.[0];
     if (!file) return setError("Select a PDF file.");
-    if (!company.trim()) return setError("Enter a company name at the top.");
+    if (!company.trim()) return setError("Enter a company name.");
 
     const form = new FormData();
     form.append("file", file);
@@ -52,6 +49,17 @@ export default function Upload({ company }: Props) {
   return (
     <div className="card">
       <form onSubmit={handleSubmit}>
+        <div className="field">
+          <label htmlFor="upload-company">Company</label>
+          <input
+            id="upload-company"
+            type="text"
+            placeholder="e.g. Acme Corp"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
+        </div>
+
         <div className="field">
           <label htmlFor="doc-type">Document type</label>
           <select

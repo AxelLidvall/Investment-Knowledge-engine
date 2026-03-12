@@ -1,13 +1,35 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Upload from "./components/Upload";
 import QueryChat from "./components/QueryChat";
 import MemoGenerator from "./components/MemoGenerator";
 
 type Tab = "upload" | "ask" | "memo";
 
+export interface CompanyOption {
+  value: string;
+  label: string;
+}
+
+async function loadCompanies(): Promise<CompanyOption[]> {
+  try {
+    const r = await fetch("/api/companies");
+    const data: string[] = await r.json();
+    return data.map((c) => ({ value: c, label: c }));
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("upload");
-  const [company, setCompany] = useState("");
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+
+  const handleTabClick = useCallback(async (t: Tab) => {
+    setTab(t);
+    if (t === "ask" || t === "memo") {
+      setCompanies(await loadCompanies());
+    }
+  }, []);
 
   return (
     <>
@@ -16,9 +38,6 @@ export default function App() {
         body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; }
         .shell { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
         h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 20px; }
-        .company-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-        .company-bar label { font-size: 0.85rem; font-weight: 500; white-space: nowrap; }
-        .company-bar input { flex: 1; max-width: 280px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
         .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
         .tab { padding: 8px 18px; font-size: 0.875rem; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; color: #6b7280; }
         .tab.active { color: #111; border-bottom-color: #111; font-weight: 500; }
@@ -40,32 +59,22 @@ export default function App() {
       <div className="shell">
         <h1>Investment Knowledge Engine</h1>
 
-        <div className="company-bar">
-          <label htmlFor="global-company">Company:</label>
-          <input
-            id="global-company"
-            type="text"
-            placeholder="e.g. Acme Corp"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-          />
-        </div>
-
         <div className="tabs">
           {(["upload", "ask", "memo"] as Tab[]).map((t) => (
             <button
               key={t}
               className={`tab${tab === t ? " active" : ""}`}
-              onClick={() => setTab(t)}
+              onClick={() => handleTabClick(t)}
             >
               {t === "upload" ? "Upload" : t === "ask" ? "Ask" : "Memo"}
             </button>
           ))}
         </div>
 
-        {tab === "upload" && <Upload company={company} />}
-        {tab === "ask" && <QueryChat company={company} />}
-        {tab === "memo" && <MemoGenerator company={company} />}
+        {/* All panels stay mounted — CSS toggles visibility, preserving state across tab switches */}
+        <div style={{ display: tab === "upload" ? "block" : "none" }}><Upload /></div>
+        <div style={{ display: tab === "ask"    ? "block" : "none" }}><QueryChat companies={companies} /></div>
+        <div style={{ display: tab === "memo"   ? "block" : "none" }}><MemoGenerator companies={companies} /></div>
       </div>
     </>
   );

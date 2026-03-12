@@ -1,8 +1,6 @@
 import { useState } from "react";
-
-interface Props {
-  company: string;
-}
+import Select, { StylesConfig } from "react-select";
+import { CompanyOption } from "../App";
 
 interface MemoResult {
   title: string;
@@ -18,7 +16,29 @@ const MEMO_TYPES = [
   { value: "risk", label: "Risk Assessment" },
 ];
 
-export default function MemoGenerator({ company }: Props) {
+const selectStyles: StylesConfig<CompanyOption> = {
+  control: (base, state) => ({
+    ...base,
+    borderColor: state.isFocused ? "transparent" : "#d1d5db",
+    borderRadius: 6,
+    fontSize: "0.9rem",
+    fontFamily: "system-ui, sans-serif",
+    boxShadow: state.isFocused ? "0 0 0 2px #6366f1" : "none",
+    "&:hover": { borderColor: "#d1d5db" },
+    minHeight: 36,
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "0.9rem",
+    backgroundColor: state.isSelected ? "#111" : state.isFocused ? "#f3f4f6" : "#fff",
+    color: state.isSelected ? "#fff" : "#1a1a1a",
+  }),
+  placeholder: (base) => ({ ...base, color: "#9ca3af" }),
+  noOptionsMessage: (base) => ({ ...base, fontSize: "0.875rem", color: "#6b7280" }),
+};
+
+export default function MemoGenerator({ companies }: { companies: CompanyOption[] }) {
+  const [company, setCompany] = useState<CompanyOption | null>(null);
   const [memoType, setMemoType] = useState("summary");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MemoResult | null>(null);
@@ -28,14 +48,14 @@ export default function MemoGenerator({ company }: Props) {
     e.preventDefault();
     setError("");
     setResult(null);
-    if (!company.trim()) return setError("Enter a company name at the top.");
+    if (!company) return setError("Select a company first.");
 
     setLoading(true);
     try {
       const res = await fetch("/api/memo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company: company.trim(), memo_type: memoType }),
+        body: JSON.stringify({ company: company.value, memo_type: memoType }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -58,8 +78,26 @@ export default function MemoGenerator({ company }: Props) {
 
   return (
     <div className="card">
-      <form onSubmit={handleGenerate} style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 20 }}>
-        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
+      <form onSubmit={handleGenerate}>
+        <div className="field">
+          <label>Company</label>
+          <Select<CompanyOption>
+            options={companies}
+            value={company}
+            onChange={(opt) => { setCompany(opt); setResult(null); setError(""); }}
+            placeholder={
+              companies.length === 0
+                ? "No documents uploaded yet"
+                : "Search companies…"
+            }
+            isDisabled={companies.length === 0}
+            isClearable
+            styles={selectStyles}
+            noOptionsMessage={() => "No match"}
+          />
+        </div>
+
+        <div className="field">
           <label htmlFor="memo-type">Memo type</label>
           <select
             id="memo-type"
@@ -71,7 +109,8 @@ export default function MemoGenerator({ company }: Props) {
             ))}
           </select>
         </div>
-        <button className="btn" type="submit" disabled={loading}>
+
+        <button className="btn" type="submit" disabled={loading || !company}>
           {loading ? "Generating…" : "Generate"}
         </button>
       </form>
@@ -79,7 +118,7 @@ export default function MemoGenerator({ company }: Props) {
       {error && <p className="error">{error}</p>}
 
       {result && (
-        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20 }}>
+        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20, marginTop: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
             <div>
               <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>{result.title}</h2>
