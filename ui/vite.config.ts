@@ -6,9 +6,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/upload": "http://localhost:8000",
-      "/query": "http://localhost:8000",
-      "/memo": "http://localhost:8000",
+      "/api": "http://backend:8000",
     },
   },
 });
