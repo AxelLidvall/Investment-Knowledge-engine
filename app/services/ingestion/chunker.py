@@ -1,9 +1,12 @@
+import tiktoken
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+_enc = tiktoken.get_encoding("cl100k_base")
 
 _splitter = RecursiveCharacterTextSplitter(
     chunk_size=512,
     chunk_overlap=128,
-    length_function=len,  # character-based; close enough for embedding budget
+    length_function=lambda text: len(_enc.encode(text)),
 )
 
 

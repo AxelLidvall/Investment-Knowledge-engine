@@ -56,8 +56,8 @@ PDF upload
 PyMuPDF (fitz)          — extract raw text, preserve page numbers
     │
     ▼
-RecursiveCharacterTextSplitter
-  chunk_size=512 tokens
+RecursiveCharacterTextSplitter (tiktoken cl100k_base)
+  chunk_size=512 tokens  — well within 8191-token embedding limit
   overlap=128 tokens     — sliding window keeps context across boundaries
     │
     ▼
