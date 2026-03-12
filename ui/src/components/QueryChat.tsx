@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Select, { StylesConfig } from "react-select";
 import { CompanyOption } from "../App";
+import { parseApiError } from "../api";
 
 interface Message {
   role: "user" | "assistant";
@@ -58,10 +59,7 @@ export default function QueryChat({ companies }: { companies: CompanyOption[] })
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, company: company.value }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await parseApiError(res));
       const data = await res.json();
       setMessages((prev) => [
         ...prev,

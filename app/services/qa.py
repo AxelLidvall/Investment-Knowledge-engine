@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 import anthropic
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -68,12 +69,15 @@ async def answer_question(
     context = _build_context(chunks)
     user_message = f"{context}\n\nQuestion: {question}"
 
-    response = await _client.messages.create(
-        model=settings.llm_model,
-        max_tokens=1024,
-        system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    )
+    try:
+        response = await _client.messages.create(
+            model=settings.llm_model,
+            max_tokens=1024,
+            system=_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_message}],
+        )
+    except anthropic.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"LLM service error: {exc}") from exc
 
     raw_answer = response.content[0].text
     answer, sources = _parse_citations(raw_answer)

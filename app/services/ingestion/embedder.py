@@ -1,4 +1,5 @@
 import openai
+from fastapi import HTTPException
 
 from app.config import settings
 
@@ -20,13 +21,16 @@ async def embed_chunks(chunks: list[dict]) -> list[dict]:
     texts = [c["text"] for c in chunks]
     embeddings = []
 
-    for i in range(0, len(texts), BATCH_SIZE):
-        batch = texts[i : i + BATCH_SIZE]
-        response = await _client.embeddings.create(
-            model=settings.embedding_model,
-            input=batch,
-        )
-        embeddings.extend([item.embedding for item in response.data])
+    try:
+        for i in range(0, len(texts), BATCH_SIZE):
+            batch = texts[i : i + BATCH_SIZE]
+            response = await _client.embeddings.create(
+                model=settings.embedding_model,
+                input=batch,
+            )
+            embeddings.extend([item.embedding for item in response.data])
+    except openai.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Embedding service error: {exc}") from exc
 
     for chunk, embedding in zip(chunks, embeddings):
         chunk["embedding"] = embedding

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Select, { StylesConfig } from "react-select";
 import { CompanyOption } from "../App";
+import { parseApiError } from "../api";
 
 interface MemoResult {
   title: string;
@@ -57,10 +58,7 @@ export default function MemoGenerator({ companies }: { companies: CompanyOption[
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company: company.value, memo_type: memoType }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await parseApiError(res));
       setResult(await res.json());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Generation failed.");

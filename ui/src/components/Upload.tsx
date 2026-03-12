@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { parseApiError } from "../api";
 
 interface UploadResult {
   document_id: number;
@@ -34,10 +35,7 @@ export default function Upload() {
     setLoading(true);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: form });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await parseApiError(res));
       setResult(await res.json());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed.");

@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import anthropic
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -107,12 +108,15 @@ async def generate_memo(
         f"Write the {memo_type.value} memo for {canonical_company}."
     )
 
-    response = await _client.messages.create(
-        model=settings.llm_model,
-        max_tokens=2048,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}],
-    )
+    try:
+        response = await _client.messages.create(
+            model=settings.llm_model,
+            max_tokens=2048,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
+        )
+    except anthropic.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"LLM service error: {exc}") from exc
 
     return {
         "title": f"{memo_type.value.capitalize()} Memo — {canonical_company}",
