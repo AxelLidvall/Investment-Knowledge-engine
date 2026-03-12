@@ -221,13 +221,14 @@ async def test_list_documents_returns_200(async_client):
     fake_db, mock_session = _mock_db_override()
     app.dependency_overrides[get_db] = fake_db
 
-    mock_row = MagicMock()
-    mock_row.id = 1
-    mock_row.filename = "report.pdf"
-    mock_row.company = "Acme"
-    mock_row.doc_type = "annual_report"
-    mock_row.uploaded_at = datetime.now(timezone.utc)
-    mock_row.chunk_count = 10
+    mock_row = {
+        "id": 1,
+        "filename": "report.pdf",
+        "company": "Acme",
+        "doc_type": "annual_report",
+        "uploaded_at": datetime.now(timezone.utc),
+        "chunk_count": 10,
+    }
 
     mock_result = MagicMock()
     mock_result.mappings.return_value.all.return_value = [mock_row]
