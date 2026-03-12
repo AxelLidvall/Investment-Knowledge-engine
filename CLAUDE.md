@@ -43,13 +43,11 @@ app/
 ├── api/
 │   ├── upload.py        # POST /upload
 │   ├── query.py         # POST /query
-│   └── memo.py          # POST /memo
+│   ├── memo.py          # POST /memo
+│   └── documents.py     # GET /documents, DELETE /documents/{id}
 └── prompts/
     ├── qa_system.txt
     └── memo_system.txt
-scripts/
-├── seed_sample_docs.py  # ingest sample docs from data/sample_docs/
-└── reindex.py           # wipe and rebuild all embeddings
 ```
 
 ---
@@ -65,12 +63,6 @@ uvicorn app.main:app --reload --port 8000
 
 # Run frontend (dev)
 cd ui && npm run dev
-
-# Seed sample documents
-python scripts/seed_sample_docs.py
-
-# Reindex all documents
-python scripts/reindex.py
 
 # Run tests
 pytest tests/ -v
