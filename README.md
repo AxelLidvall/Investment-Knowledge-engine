@@ -10,7 +10,7 @@ A RAG system built for investment teams. Upload annual reports, diligence packs,
 
 - **Upload** PDFs (annual reports, memos, diligence packs) tagged to a company
 - **Ask** natural-language questions — answers are grounded in the documents with page-level citations
-- **Generate** investment memos (bull case, bear case, or full thesis) from the uploaded material
+- **Generate** investment memos (company summary, investment thesis, or risk assessment) from the uploaded material
 - **Browse** the document library — list, filter by company, delete
 
 ---
